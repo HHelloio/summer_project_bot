@@ -15,7 +15,7 @@ from tqdm import tqdm  # Для отображения прогресса
 from dotenv import load_dotenv
 
 
-load_dotenv('/Users/antonilchenko/Documents/GitHub/summer_project_bot/token.env')  
+load_dotenv('token.env')
 token = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = telebot.TeleBot(token=token)
 
