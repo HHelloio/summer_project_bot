@@ -15,6 +15,7 @@ from tqdm import tqdm  # Для отображения прогресса
 from dotenv import load_dotenv
 
 
+
 load_dotenv('token.env')
 token = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = telebot.TeleBot(token=token)
@@ -31,7 +32,7 @@ embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 EMBEDDING_DIM = 384
 
 # ======== НАСТРОЙКИ РЕЖИМА ========
-DEBUG_MODE = True  # Включаем для диагностики
+DEBUG_MODE = False  # Включаем для диагностики
 
 
 # ==================================
@@ -399,7 +400,7 @@ def handle_files(message):
         if message.text == '👋 И тебе не хворать':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             btn1 = types.KeyboardButton("Добавить файл")
-            btn2 = types.KeyboardButton('Построить индекс')
+            btn2 = types.KeyboardButton('Загрузить файл')
             btn3 = types.KeyboardButton('Удалить все файлы')
             btn4 = types.KeyboardButton("📝 Написать запрос")
             btn6 = types.KeyboardButton("💾 Сохранить индекс")
@@ -409,14 +410,14 @@ def handle_files(message):
                 btn5 = types.KeyboardButton("ℹ️ Информация о системе")
                 markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
             else:
-                markup.add(btn1, btn2, btn3, btn4, btn6, btn7)
+                markup.add(btn1, btn2, btn3, btn4)
 
             bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=markup)
 
         elif message.text == 'Добавить файл':
             bot.send_message(message.chat.id, 'Присылайте файл в формате PDF, DOCX или TXT')
 
-        elif message.text == 'Построить индекс':
+        elif message.text == 'Загрузить файл':
             if not all_texts:
                 bot.send_message(message.chat.id, "❌ Нет файлов для построения индекса.")
             else:
@@ -433,6 +434,17 @@ def handle_files(message):
             text_chunks = []
             faiss_index = None
             bot.send_message(message.chat.id, '✅ Все файлы, запросы и индексы удалены')
+            
+            #Для удаления сохраненных индексов на диске
+            try:
+                os.remove("faiss_index.index")
+            except FileNotFoundError:
+                pass
+
+            try:
+                os.remove("text_chunks.pkl")
+            except FileNotFoundError:
+                pass
 
         elif message.text == '📝 Написать запрос':
             bot.send_message(message.chat.id, "Напиши свой запрос по содержимому документов:")
