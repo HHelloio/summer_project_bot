@@ -12,10 +12,13 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import os
 from tqdm import tqdm  # Для отображения прогресса
+from dotenv import load_dotenv
 
-token = "token-bot"
+
+load_dotenv('/Users/antonilchenko/Documents/GitHub/summer_project_bot/token.env')  
+token = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = telebot.TeleBot(token=token)
-#fjhdaslkfhsdlkajhs
+
 # Глобальные переменные
 all_texts = []
 saved_requests = []
