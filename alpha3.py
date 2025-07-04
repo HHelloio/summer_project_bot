@@ -15,7 +15,7 @@ from tqdm import tqdm  # Для отображения прогресса
 
 token = "token-bot"
 bot = telebot.TeleBot(token=token)
-
+#fjhdaslkfhsdlkajhs
 # Глобальные переменные
 all_texts = []
 saved_requests = []
