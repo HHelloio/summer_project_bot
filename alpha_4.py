@@ -1,3 +1,4 @@
+from importlib import util
 import telebot
 from telebot import types
 import io
@@ -11,8 +12,10 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
 import os
-from tqdm import tqdm  # Для отображения прогресса
 from dotenv import load_dotenv
+import nltk
+from nltk.tokenize import sent_tokenize
+
 
 
 
@@ -177,25 +180,46 @@ def save_request(message):
     process_request(message)
 
 
-def split_into_chunks(text: str, max_words: int = 400) -> list[str]:
-    """Улучшенное разбиение с сохранением контекста"""
-    words = text.split()
+def split_into_chunks(text: str, max_words: int = 400, similarity_threshold: float = 0.6) -> list[str]:
+    """
+    Делит текст на чанки с сохранением смысловой связанности.
+    
+    :param text: исходный текст
+    :param max_words: максимальное количество слов в чанке
+    :param similarity_threshold: порог семантической близости (0–1)
+    :return: список чанков текста
+    """
+    sentences = sent_tokenize(text)
     chunks = []
     current_chunk = []
-    current_length = 0
+    current_words = 0
 
-    for word in words:
-        if current_length + 1 <= max_words:
-            current_chunk.append(word)
-            current_length += 1
-        else:
+    for sentence in sentences:
+        sentence_words = sentence.split()
+        num_words = len(sentence_words)
+
+        if not current_chunk:
+            current_chunk.append(sentence)
+            current_words = num_words
+            continue
+
+        # Семантическая близость между последним предложением в чанке и текущим
+        last_sentence = current_chunk[-1]
+        sim = util.pytorch_cos_sim(
+            embedding_model.encode(last_sentence, convert_to_tensor=True),
+            embedding_model.encode(sentence, convert_to_tensor=True)
+        ).item()
+
+        if current_words + num_words > max_words or sim < similarity_threshold:
             chunks.append(" ".join(current_chunk))
-            current_chunk = [word]
-            current_length = 1
+            current_chunk = [sentence]
+            current_words = num_words
+        else:
+            current_chunk.append(sentence)
+            current_words += num_words
 
     if current_chunk:
         chunks.append(" ".join(current_chunk))
-
     return chunks
 
 
@@ -288,7 +312,11 @@ def generate_response(prompt: str, context: str) -> str:
         response = ollama.generate(
             model=model_name,
             prompt=full_prompt,
-            options=options
+            options={
+                'num_predict': 3000,
+                'temperature': 0.7,
+                'top_p': 0.9
+            }
         )
 
         answer = response['response'].strip()

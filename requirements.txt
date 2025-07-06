@@ -1,0 +1,11 @@
+python-dotenv
+pytelegrambotapi
+python-docx
+PyPDF2
+chardet
+faiss-cpu
+sentence-transformers
+torch
+numpy
+tqdm
+ollama
